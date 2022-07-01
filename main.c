@@ -9,12 +9,14 @@
 #include <pe/vector.h>
 #include <pe/matrix.h>
 #include <pe/rigidbody.h>
-//#include <spring.h>
+#include <pe/spring.h>
 
 //#include <broadcollision.h>
 #include <pe/narrowcollision.h>
 
 #include <ge/fb.h>
+#include <ge/cam.h>
+#include <ge/draw.h>
 
 #define dTime 1/64.0
 #define G 9.81
@@ -26,89 +28,31 @@
   printf("penetration: %7.2f\n", pC->penetration);
 }*/
 
-Vector transV(Vector v) {
-  return (Vector){(int)(v.x * 10 + 960), (int)(-v.y * 10 + 540), v.z};
-}
-
-void drawV(Vector v, uint32_t color) {
-   drawPoint(transV(v).x, transV(v).y, color);
-}
-
-void drawL(Vector v1, Vector v2, uint32_t color) {
-  //printf("call drawline with %f %f %f %f\n", v1.x, v1.y, v2.x, v2.y);
-  drawLine(transV(v1).x, transV(v1).y, transV(v2).x, transV(v2).y, color);
-}
-
-void drawCB(CollisionBox *pCB, uint32_t color) {
-  Vector p1 = m34vMult(pCB->pRB->transformMatrix, (Vector){pCB->halfSize.x, pCB->halfSize.y, 0});
-  Vector p2 = m34vMult(pCB->pRB->transformMatrix, (Vector){pCB->halfSize.x, -pCB->halfSize.y, 0});
-  Vector p3 = m34vMult(pCB->pRB->transformMatrix, (Vector){-pCB->halfSize.x, -pCB->halfSize.y, 0});
-  Vector p4 = m34vMult(pCB->pRB->transformMatrix, (Vector){-pCB->halfSize.x, pCB->halfSize.y, 0});
-  drawL(p1, p2, color);
-  drawL(p2, p3, color);
-  drawL(p3, p4, color);
-  drawL(p4, p1, color);
-}
-
-void clearCB(CollisionBox *pCB) {
-  Vector p1 = m34vMult(pCB->pRB->transformMatrix, (Vector){pCB->halfSize.x, pCB->halfSize.y, 0});
-  Vector p2 = m34vMult(pCB->pRB->transformMatrix, (Vector){pCB->halfSize.x, -pCB->halfSize.y, 0});
-  Vector p3 = m34vMult(pCB->pRB->transformMatrix, (Vector){-pCB->halfSize.x, -pCB->halfSize.y, 0});
-  Vector p4 = m34vMult(pCB->pRB->transformMatrix, (Vector){-pCB->halfSize.x, pCB->halfSize.y, 0});
-  drawL(p1, p2, black);
-  drawL(p2, p3, black);
-  drawL(p3, p4, black);
-  drawL(p4, p1, black);
-}
-
 Matrix33 cubeiit = {1, 0, 0, 0, 1, 0, 0, 0, 1};
 Matrix34 null34 = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 int main() {
-  fbInit();
-  Rigidbody rb = {{10, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {1, 0, 0, 0}, 1, cubeiit, null34};
-  //Rigidbody rb2 = {{8, 3, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {1, 0, 0, 0}, 1, cubeiit, null34};
-  Rigidbody rb2 = {{8, 3, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0.901, 0, 0, 0.434}, 1, cubeiit, null34};
+  uint32_t *b = fbInit();
+  Rigidbody rb = {{10, 0, 10}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {1, 0, 0, 0}, 1, cubeiit, null34};
+  Rigidbody rb2 = {{8, 3, 10}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0.901, 0, 0, 0.434}, 1, cubeiit, null34};
   rb2.o = qNorm(rb2.o);
   rb.transformMatrix = m34FromQV(rb.o, rb.p);
   rb2.transformMatrix = m34FromQV(rb2.o, rb2.p);
   CollisionBox cb = {&rb, {0, 0, 0}, {2, 2, 2}};
   CollisionBox cb2 = {&rb2, {0, 0, 0}, {2, 2, 2}};
-  /*Vector p1 = m34vMult(rb2.transformMatrix, (Vector){2, 2, 0});
-  Vector p2 = m34vMult(rb2.transformMatrix, (Vector){2, -2, 0});
-  Vector p3 = m34vMult(rb2.transformMatrix, (Vector){-2, 2, 0});
-  Vector p4 = m34vMult(rb2.transformMatrix, (Vector){-2, -2, 0});
-  Vector p5 = m34vMult(rb.transformMatrix, (Vector){2, 2, 0});
-  Vector p6 = m34vMult(rb.transformMatrix, (Vector){2, -2, 0});
-  Vector p7 = m34vMult(rb.transformMatrix, (Vector){-2, 2, 0});
-  Vector p8 = m34vMult(rb.transformMatrix, (Vector){-2, -2, 0});*/
+
+  Camera cam = {{0, 0, 0}, 100, {1, 0, 0, 0}, null34};
+  cam.transform = m34FromQV(cam.o, cam.p);
+  
   for (;;) {
-    /*//drawV(p1, red);
-    //drawV(p2, red);
-    drawL(p1, p2, red);
-    drawL(p3, p4, red);
-    //drawV(p3, red);
-    //drawV(p4, red);
-    drawV(p5, blue);
-    drawV(p6, blue);
-    drawV(p7, blue);
-    drawV(p8, blue);*/
-    drawCB(&cb, red);
-    drawCB(&cb2, blue);
+    drawBox(b, &cam, &cb, red);
+    drawBox(b, &cam, &cb2, blue);
     usleep((int)(1000000*dTime));
-    clearCB(&cb);
-    clearCB(&cb2);
-    /*drawV(p1, black);
-    drawV(p2, black);
-    drawV(p3, black);
-    drawV(p4, black);
-    drawV(p5, black);
-    drawV(p6, black);
-    drawV(p7, black);
-    drawV(p8, black);*/
+    drawBox(b, &cam, &cb, black);
+    drawBox(b, &cam, &cb2, black);
   }
   
-  BoxBoxCollision(&cb, &cb2);
+  //BoxBoxCollision(&cb, &cb2);
   /*for (int i = 0; i < 3; i++) {
     printf("pen: %f ", collisions[i].penetration);
     printV(collisions[i].p);
