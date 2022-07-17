@@ -13,6 +13,7 @@
 
 //#include <broadcollision.h>
 #include <pe/narrowcollision.h>
+#include <pe/resolution.h>
 
 #include <ge/fb.h>
 #include <ge/cam.h>
@@ -32,6 +33,10 @@ Matrix33 cubeiit = {1, 0, 0, 0, 1, 0, 0, 0, 1};
 Matrix34 null34 = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 int main() {
+
+  Collision collisions[999];
+  int collisionC = 0;
+
   uint32_t *b = fbInit();
   Rigidbody rb = {{10, 0, 10}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {1, 0, 0, 0}, 1, cubeiit, null34};
   Rigidbody rb2 = {{8, 3, 10}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0.901, 0, 0, 0.434}, 1, cubeiit, null34};
@@ -45,6 +50,12 @@ int main() {
   cam.transform = m34FromQV(cam.o, cam.p);
   
   for (;;) {
+    BoxBoxCollision(&cb, &cb2, &collisions[collisionC]);
+    collisionC++;
+    for (int i = 0; i < collisionC; i++)
+      resolveCollision(&collisions[i]);
+    collisionC = 0;
+
     drawBox(b, &cam, &cb, red);
     drawBox(b, &cam, &cb2, blue);
     usleep((int)(1000000*dTime));
@@ -52,7 +63,6 @@ int main() {
     drawBox(b, &cam, &cb2, black);
   }
   
-  //BoxBoxCollision(&cb, &cb2);
   /*for (int i = 0; i < 3; i++) {
     printf("pen: %f ", collisions[i].penetration);
     printV(collisions[i].p);
