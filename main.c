@@ -19,7 +19,7 @@
 #include <ge/cam.h>
 #include <ge/draw.h>
 
-#define dTime 1/64.0
+#define dTime 1/256.0
 #define G 9.81
 
 /*void printCollision(PointCollision *pC) {
@@ -35,7 +35,7 @@ void printCollision(Collision *pC) {
   printf("penetration: %7.2f\n", pC->penetration);
 }
 
-Matrix33 cubeiit = {1/6.0, 0, 0, 0, 1/6.0, 0, 0, 0, 1/6.0};
+Matrix33 cubeiit = {6.0/16.0, 0, 0, 0, 6.0/16.0, 0, 0, 0, 6.0/16.0};
 Matrix34 null34 = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 int main() {
@@ -44,8 +44,12 @@ int main() {
   int collisionC = 0;
 
   uint32_t *b = fbInit();
-  Rigidbody rb = {{3, 10, 0}, {0, 0, 0}, {0, 0, 0}, {0, -G, 0}, {0, 0, 0}, {0, 0, 0}, {1, 0, 0, 0.001}, 1, cubeiit, null34};
+  //Rigidbody rb = {{2, 10, 0}, {0, 0, 0}, {0, 0, 0}, {0, -G, 0}, {0, 0, 0}, {0, 0, 0}, {1, 0.01, 0.01, 0.01}, 1, cubeiit, null34};
+  //Rigidbody rb = {{3, 10, 0}, {0, 0, 0}, {0, 0, 0}, {0, -G, 0}, {0, 0, 0}, {0, 0, 0}, {0.92, 0, 0, 0.38}, 1, cubeiit, null34};
+  Rigidbody rb = {{3, 10, 0}, {0, 0, 0}, {0, 0, 0}, {0, -G, 0}, {0, 0, 0}, {0, 0, 0}, {1, 0, 0, 0}, 1, cubeiit, null34};
   Rigidbody rb2 = {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {1, 0, 0, 0}, 0, cubeiit, null34};
+  rb.o = qvAdd(rb.o, (Vector){0, 0.5, 0});
+  rb.o = qNorm(rb.o);
   rb2.o = qNorm(rb2.o);
   rb.transformMatrix = m34FromQV(rb.o, rb.p);
   rb2.transformMatrix = m34FromQV(rb2.o, rb2.p);
@@ -56,13 +60,14 @@ int main() {
   cam.transform = m34FromQV(cam.o, cam.p);
   
   for (;;) {
-    rb.transformMatrix = m34FromQV(rb.o, rb.p);
-    rb2.transformMatrix = m34FromQV(rb2.o, rb2.p);
     updateRigidbody(&rb, dTime);
     updateRigidbody(&rb2, dTime);
+    rb.transformMatrix = m34FromQV(rb.o, rb.p);
+    rb2.transformMatrix = m34FromQV(rb2.o, rb2.p);
 
     collisionC = 0;
     collisionC += BoxBoxCollision(&cb, &cb2, &collisions[collisionC]);
+    //if (collisionC) {printCollision(&collisions[0]);}
     for (int i = 0; i < collisionC; i++)
       resolveCollision(&collisions[i]);
 
