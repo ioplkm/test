@@ -12,6 +12,7 @@
 #include <pe/spring.h>
 
 //#include <broadcollision.h>
+#include <pe/collision.h>
 #include <pe/narrowcollision.h>
 #include <pe/resolution.h>
 
@@ -46,20 +47,29 @@ int main() {
   uint32_t *b = fbInit();
   //Rigidbody rb = {{2, 10, 0}, {0, 0, 0}, {0, 0, 0}, {0, -G, 0}, {0, 0, 0}, {0, 0, 0}, {1, 0.01, 0.01, 0.01}, 1, cubeiit, null34};
   //Rigidbody rb = {{3, 10, 0}, {0, 0, 0}, {0, 0, 0}, {0, -G, 0}, {0, 0, 0}, {0, 0, 0}, {0.92, 0, 0, 0.38}, 1, cubeiit, null34};
-  Rigidbody rb = {{3, 10, 0}, {0, 0, 0}, {0, 0, 0}, {0, -G, 0}, {0, 0, 0}, {0, 0, 0}, {1, 0, 0, 0}, 1, cubeiit, null34};
+  Rigidbody rb = {{3, 4, 0}, {0, 0, 0}, {0, 0, 0}, {0, -G, 0}, {0, 0, 0}, {0, 0, 0}, {1, 0, 0, 0}, 1, cubeiit, null34};
   Rigidbody rb2 = {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {1, 0, 0, 0}, 0, cubeiit, null34};
-  rb.o = qvAdd(rb.o, (Vector){0, 0.5, 0});
+  //rb.o = qvAdd(rb.o, (Vector){0, 0.5, 0});
   rb.o = qNorm(rb.o);
   rb2.o = qNorm(rb2.o);
-  rb.transformMatrix = m34FromQV(rb.o, rb.p);
-  rb2.transformMatrix = m34FromQV(rb2.o, rb2.p);
+  rb.transform = m34FromQV(rb.o, rb.p);
+  rb2.transform = m34FromQV(rb2.o, rb2.p);
   CollisionBox cb = {&rb, {0, 0, 0}, {2, 2, 2}};
   CollisionBox cb2 = {&rb2, {0, 0, 0}, {2, 2, 2}};
 
   Camera cam = {{0, 0, -10}, 100, {1, 0, 0, 0}, null34};
   cam.transform = m34FromQV(cam.o, cam.p);
+
+  ConvexPolyhedra ph = {&rb, {0, 0, 0}, {2, 2, 2}};
+  ConvexPolyhedra ph2 = {&rb2, {0, 0, 0}, {2, 2, 2}};
   
   for (;;) {
+    int c = collision(&ph, &ph2, collisions[collisionC]);
+    printf("%d\n", c);
+    break;
+  }
+
+  /*for (;;) {
     updateRigidbody(&rb, dTime);
     updateRigidbody(&rb2, dTime);
     rb.transformMatrix = m34FromQV(rb.o, rb.p);
@@ -67,7 +77,11 @@ int main() {
 
     collisionC = 0;
     collisionC += BoxBoxCollision(&cb, &cb2, &collisions[collisionC]);
-    //if (collisionC) {printCollision(&collisions[0]);}
+    if (collisionC) {
+      for (int i = 0; i < collisionC; i++) 
+        printCollision(&collisions[i]);
+      break;
+    }
     for (int i = 0; i < collisionC; i++)
       resolveCollision(&collisions[i]);
 
@@ -76,7 +90,7 @@ int main() {
     usleep((int)(1000000*dTime));
     drawBox(b, &cam, &cb, black);
     drawBox(b, &cam, &cb2, black);
-  }
+  }*/
 }
 
 /*int main() {
