@@ -29,7 +29,13 @@
   printf("penetration: %7.2f\n", pC->penetration);
 }*/
 
-Matrix33 cubeiit = {1, 0, 0, 0, 1, 0, 0, 0, 1};
+void printCollision(Collision *pC) {
+  printf("p: %7.2f, %7.2f, %7.2f\n", pC->p.x, pC->p.y, pC->p.z);
+  printf("normal: %7.2f, %7.2f, %7.2f\n", pC->normal.x, pC->normal.y, pC->normal.z);
+  printf("penetration: %7.2f\n", pC->penetration);
+}
+
+Matrix33 cubeiit = {1/6.0, 0, 0, 0, 1/6.0, 0, 0, 0, 1/6.0};
 Matrix34 null34 = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 int main() {
@@ -38,23 +44,27 @@ int main() {
   int collisionC = 0;
 
   uint32_t *b = fbInit();
-  Rigidbody rb = {{10, 0, 10}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {1, 0, 0, 0}, 1, cubeiit, null34};
-  Rigidbody rb2 = {{8, 3, 10}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0.901, 0, 0, 0.434}, 1, cubeiit, null34};
+  Rigidbody rb = {{3, 10, 0}, {0, 0, 0}, {0, 0, 0}, {0, -G, 0}, {0, 0, 0}, {0, 0, 0}, {1, 0, 0, 0.001}, 1, cubeiit, null34};
+  Rigidbody rb2 = {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {1, 0, 0, 0}, 0, cubeiit, null34};
   rb2.o = qNorm(rb2.o);
   rb.transformMatrix = m34FromQV(rb.o, rb.p);
   rb2.transformMatrix = m34FromQV(rb2.o, rb2.p);
   CollisionBox cb = {&rb, {0, 0, 0}, {2, 2, 2}};
   CollisionBox cb2 = {&rb2, {0, 0, 0}, {2, 2, 2}};
 
-  Camera cam = {{0, 0, 0}, 100, {1, 0, 0, 0}, null34};
+  Camera cam = {{0, 0, -10}, 100, {1, 0, 0, 0}, null34};
   cam.transform = m34FromQV(cam.o, cam.p);
   
   for (;;) {
-    BoxBoxCollision(&cb, &cb2, &collisions[collisionC]);
-    collisionC++;
+    rb.transformMatrix = m34FromQV(rb.o, rb.p);
+    rb2.transformMatrix = m34FromQV(rb2.o, rb2.p);
+    updateRigidbody(&rb, dTime);
+    updateRigidbody(&rb2, dTime);
+
+    collisionC = 0;
+    collisionC += BoxBoxCollision(&cb, &cb2, &collisions[collisionC]);
     for (int i = 0; i < collisionC; i++)
       resolveCollision(&collisions[i]);
-    collisionC = 0;
 
     drawBox(b, &cam, &cb, red);
     drawBox(b, &cam, &cb2, blue);
@@ -62,11 +72,6 @@ int main() {
     drawBox(b, &cam, &cb, black);
     drawBox(b, &cam, &cb2, black);
   }
-  
-  /*for (int i = 0; i < 3; i++) {
-    printf("pen: %f ", collisions[i].penetration);
-    printV(collisions[i].p);
-  }*/
 }
 
 /*int main() {
