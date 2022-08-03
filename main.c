@@ -47,8 +47,8 @@ int main() {
   uint32_t *b = fbInit();
   //Rigidbody rb = {{2, 10, 0}, {0, 0, 0}, {0, 0, 0}, {0, -G, 0}, {0, 0, 0}, {0, 0, 0}, {1, 0.01, 0.01, 0.01}, 1, cubeiit, null34};
   //Rigidbody rb = {{3, 10, 0}, {0, 0, 0}, {0, 0, 0}, {0, -G, 0}, {0, 0, 0}, {0, 0, 0}, {0.92, 0, 0, 0.38}, 1, cubeiit, null34};
-  Rigidbody rb = {{3, 4, 0}, {0, 0, 0}, {0, 0, 0}, {0, -G, 0}, {0, 0, 0}, {0, 0, 0}, {1, 0, 0, 0}, 1, cubeiit, null34};
-  Rigidbody rb2 = {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {1, 0, 0, 0}, 0, cubeiit, null34};
+  Rigidbody rb = {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {1, 0, 0, 0}, 0, cubeiit, null34};
+  Rigidbody rb2 = {{3, 4, 0}, {0, 0, 0}, {0, 0, 0}, {0, -G, 0}, {0, 0, 0}, {0, 0, 0}, {1, 0, 0, 0}, 1, cubeiit, null34};
   //rb.o = qvAdd(rb.o, (Vector){0, 0.5, 0});
   rb.o = qNorm(rb.o);
   rb2.o = qNorm(rb2.o);
@@ -64,8 +64,9 @@ int main() {
   ConvexPolyhedra ph2 = {&rb2, {0, 0, 0}, {2, 2, 2}};
   
   for (;;) {
-    int c = collision(&ph, &ph2, collisions[collisionC]);
-    printf("%d\n", c);
+    collisionC += collision(&ph, &ph2, &collisions[collisionC]);
+    for (int i = 0; i < collisionC; i++)
+    printCollision(&collisions[i]);
     break;
   }
 
