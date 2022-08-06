@@ -1,5 +1,8 @@
 CC = clang
 CFLAGS = -Wall -Wextra -Wpedantic -pipe -O3 -s -std=c99
-LDFLAGS = -lge -lpe -L/usr/local/lib64
+LDFLAGS = -L/usr/local/lib64
+LDLIBS = -lge -lpe
 all: main.c
-	$(CC) $(CFLAGS) $(LDFLAGS) main.c -o main
+	$(CC) $(CFLAGS) $(LDFLAGS) $(LDLIBS) main.c -o main
+clean:
+	rm -f main

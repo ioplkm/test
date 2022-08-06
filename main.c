@@ -13,12 +13,12 @@
 
 //#include <broadcollision.h>
 #include <pe/collision.h>
-#include <pe/narrowcollision.h>
-#include <pe/resolution.h>
+//#include <pe/narrowcollision.h>
+//#include <pe/resolution.h>
 
 #include <ge/fb.h>
 #include <ge/cam.h>
-#include <ge/draw.h>
+//#include <ge/draw.h>
 
 #define dTime 1/256.0
 #define G 9.81
@@ -33,7 +33,7 @@
 void printCollision(Collision *pC) {
   printf("p: %7.2f, %7.2f, %7.2f\n", pC->p.x, pC->p.y, pC->p.z);
   printf("normal: %7.2f, %7.2f, %7.2f\n", pC->normal.x, pC->normal.y, pC->normal.z);
-  printf("penetration: %7.2f\n", pC->penetration);
+  //printf("penetration: %7.2f\n", pC->penetration);
 }
 
 Matrix33 cubeiit = {6.0/16.0, 0, 0, 0, 6.0/16.0, 0, 0, 0, 6.0/16.0};
@@ -65,8 +65,8 @@ int main() {
   
   for (;;) {
     collisionC += collision(&ph, &ph2, &collisions[collisionC]);
-    for (int i = 0; i < collisionC; i++)
-    printCollision(&collisions[i]);
+    printf("collision amount: %d\n", collisionC);
+    for (int i = 0; i < collisionC; i++) printCollision(&collisions[i]);
     break;
   }
 
