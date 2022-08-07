@@ -13,14 +13,14 @@
 
 //#include <broadcollision.h>
 #include <pe/collision.h>
-//#include <pe/narrowcollision.h>
-//#include <pe/resolution.h>
+#include <pe/narrowcollision.h>
+#include <pe/resolution.h>
 
 #include <ge/fb.h>
 #include <ge/cam.h>
-//#include <ge/draw.h>
+#include <ge/draw.h>
 
-#define dTime 1/256.0
+#define dTime 1/640.0
 #define G 9.81
 
 /*void printCollision(PointCollision *pC) {
@@ -33,7 +33,7 @@
 void printCollision(Collision *pC) {
   printf("p: %7.2f, %7.2f, %7.2f\n", pC->p.x, pC->p.y, pC->p.z);
   printf("normal: %7.2f, %7.2f, %7.2f\n", pC->normal.x, pC->normal.y, pC->normal.z);
-  //printf("penetration: %7.2f\n", pC->penetration);
+  printf("penetration: %7.2f\n", pC->penetration);
 }
 
 Matrix33 cubeiit = {6.0/16.0, 0, 0, 0, 6.0/16.0, 0, 0, 0, 6.0/16.0};
@@ -47,7 +47,7 @@ int main() {
   uint32_t *b = fbInit();
   //Rigidbody rb = {{2, 10, 0}, {0, 0, 0}, {0, 0, 0}, {0, -G, 0}, {0, 0, 0}, {0, 0, 0}, {1, 0.01, 0.01, 0.01}, 1, cubeiit, null34};
   //Rigidbody rb = {{3, 10, 0}, {0, 0, 0}, {0, 0, 0}, {0, -G, 0}, {0, 0, 0}, {0, 0, 0}, {0.92, 0, 0, 0.38}, 1, cubeiit, null34};
-  Rigidbody rb = {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {1, 0, 0, 0}, 0, cubeiit, null34};
+  Rigidbody rb = {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {1, 0, 0, 0}, 1, cubeiit, null34};
   Rigidbody rb2 = {{3, 4, 0}, {0, 0, 0}, {0, 0, 0}, {0, -G, 0}, {0, 0, 0}, {0, 0, 0}, {1, 0, 0, 0}, 1, cubeiit, null34};
   //rb.o = qvAdd(rb.o, (Vector){0, 0.5, 0});
   rb.o = qNorm(rb.o);
@@ -63,35 +63,45 @@ int main() {
   ConvexPolyhedra ph = {&rb, {0, 0, 0}, {2, 2, 2}};
   ConvexPolyhedra ph2 = {&rb2, {0, 0, 0}, {2, 2, 2}};
   
+  /*Collision C;
+      C.p = (Vector){1.5, 2, 0};
+      C.normal = (Vector){0, 1, 0};
+      C.penetration = 0.001;
+      C.r = 0;
+      C.pB1 = &rb;
+      C.pB2 = &rb2;
+  collisionC = 20;
+  for (int i = 0; i < collisionC; i++)
+   collisions[i] = C;*/
   for (;;) {
-    collisionC += collision(&ph, &ph2, &collisions[collisionC]);
-    printf("collision amount: %d\n", collisionC);
-    for (int i = 0; i < collisionC; i++) printCollision(&collisions[i]);
-    break;
-  }
-
-  /*for (;;) {
     updateRigidbody(&rb, dTime);
     updateRigidbody(&rb2, dTime);
-    rb.transformMatrix = m34FromQV(rb.o, rb.p);
-    rb2.transformMatrix = m34FromQV(rb2.o, rb2.p);
+    rb.transform = m34FromQV(rb.o, rb.p);
+    rb2.transform = m34FromQV(rb2.o, rb2.p);
 
     collisionC = 0;
+    //collisionC += collision(&ph, &ph2, &collisions[collisionC]);
     collisionC += BoxBoxCollision(&cb, &cb2, &collisions[collisionC]);
-    if (collisionC) {
-      for (int i = 0; i < collisionC; i++) 
-        printCollision(&collisions[i]);
-      break;
-    }
-    for (int i = 0; i < collisionC; i++)
-      resolveCollision(&collisions[i]);
 
+    for (int i = 0; i < collisionC; i++) {
+      //collisions[i].p.z = 0;
+      collisions[i].r = 0.01;
+      resolveCollision(&collisions[i]);
+    }
+
+    //for (int i = 0; i < collisionC; i++) printCollision(&collisions[i]);
+
+    /*drawPolyhedra(b, &cam, &ph, red);
+    drawPolyhedra(b, &cam, &ph2, blue);
+    usleep((int)(1000000*dTime));
+    drawPolyhedra(b, &cam, &ph, black);
+    drawPolyhedra(b, &cam, &ph2, black);*/
     drawBox(b, &cam, &cb, red);
     drawBox(b, &cam, &cb2, blue);
     usleep((int)(1000000*dTime));
     drawBox(b, &cam, &cb, black);
     drawBox(b, &cam, &cb2, black);
-  }*/
+  }
 }
 
 /*int main() {
