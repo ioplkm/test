@@ -48,7 +48,7 @@ int main() {
   //Rigidbody rb = {{2, 10, 0}, {0, 0, 0}, {0, 0, 0}, {0, -G, 0}, {0, 0, 0}, {0, 0, 0}, {1, 0.01, 0.01, 0.01}, 1, cubeiit, null34};
   //Rigidbody rb = {{3, 10, 0}, {0, 0, 0}, {0, 0, 0}, {0, -G, 0}, {0, 0, 0}, {0, 0, 0}, {0.92, 0, 0, 0.38}, 1, cubeiit, null34};
   Rigidbody rb = {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {1, 0, 0, 0}, 1, cubeiit, null34};
-  Rigidbody rb2 = {{3, 4, 0}, {0, 0, 0}, {0, 0, 0}, {0, -G, 0}, {0, 0, 0}, {0, 0, 0}, {1, 0, 0, 0}, 1, cubeiit, null34};
+  Rigidbody rb2 = {{-3, 4, 0}, {0, 0, 0}, {0, 0, 0}, {0, -G, 0}, {0, 0, 0}, {0, 0, 0}, {1, 0, 0, 0}, 1, cubeiit, null34};
   //rb.o = qvAdd(rb.o, (Vector){0, 0.5, 0});
   rb.o = qNorm(rb.o);
   rb2.o = qNorm(rb2.o);
@@ -63,16 +63,6 @@ int main() {
   ConvexPolyhedra ph = {&rb, {0, 0, 0}, {2, 2, 2}};
   ConvexPolyhedra ph2 = {&rb2, {0, 0, 0}, {2, 2, 2}};
   
-  /*Collision C;
-      C.p = (Vector){1.5, 2, 0};
-      C.normal = (Vector){0, 1, 0};
-      C.penetration = 0.001;
-      C.r = 0;
-      C.pB1 = &rb;
-      C.pB2 = &rb2;
-  collisionC = 20;
-  for (int i = 0; i < collisionC; i++)
-   collisions[i] = C;*/
   for (;;) {
     updateRigidbody(&rb, dTime);
     updateRigidbody(&rb2, dTime);
@@ -80,16 +70,14 @@ int main() {
     rb2.transform = m34FromQV(rb2.o, rb2.p);
 
     collisionC = 0;
-    //collisionC += collision(&ph, &ph2, &collisions[collisionC]);
-    collisionC += BoxBoxCollision(&cb, &cb2, &collisions[collisionC]);
+    collisionC += collision(&ph, &ph2, &collisions[collisionC]);
+    //collisionC += BoxBoxCollision(&cb, &cb2, &collisions[collisionC]);
 
     for (int i = 0; i < collisionC; i++) {
-      //collisions[i].p.z = 0;
-      collisions[i].r = 0.01;
-      resolveCollision(&collisions[i]);
+      resolveInterpenetration(&collisions[i]);
+      resolveVelocity(&collisions[i]);
+      printCollision(&collisions[i]);
     }
-
-    //for (int i = 0; i < collisionC; i++) printCollision(&collisions[i]);
 
     /*drawPolyhedra(b, &cam, &ph, red);
     drawPolyhedra(b, &cam, &ph2, blue);
