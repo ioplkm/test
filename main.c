@@ -18,6 +18,7 @@
 #include <ge/cam.h>
 #include <ge/draw.h>
 #include <ge/wl.h>
+#include <ge/seat.h>
 
 #define dTime 1/640.0
 #define G 9.81
@@ -41,6 +42,26 @@ Matrix34 null34 = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 Camera cam;
 CollisionBox cb;
 CollisionBox cb2;
+
+void key(uint32_t key, uint8_t state) {
+  switch (key) {
+    case 25:
+      cam.p.y+=10;
+      break;
+    case 38:
+      cam.p.x-=10;
+      break;
+    case 39:
+      cam.p.y-=10;
+      break;
+    case 40:
+      cam.p.x+=10;
+      break;
+  }
+  cam.transform = m34FromQV(cam.o, cam.p);
+  printf("key: %d\n", key);
+  //printV(cam.p);
+}
 
 void *wl() {
   uint32_t *b = init();
@@ -94,7 +115,7 @@ int main() {
     for (int i = 0; i < collisionC; i++) {
       resolveInterpenetration(&collisions[i]);
       resolveVelocity(&collisions[i]);
-      printCollision(&collisions[i]);
+      //printCollision(&collisions[i]);
     }
 
     usleep((int)(1000000*dTime*10));
