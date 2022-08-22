@@ -20,8 +20,12 @@
 #include <ge/wl.h>
 #include <ge/seat.h>
 
-#define dTime 1/640.0
+#define dTime 1/64.0
 #define G 9.81
+
+int slow = 10;
+
+bool stop = 0;
 
 /*void printCollision(PointCollision *pC) {
   printf("coord1: %7.2f, %7.2f, %7.2f\n", pC->pPoint1->p.x, pC->pPoint1->p.y, pC->pPoint1->p.z);
@@ -36,6 +40,15 @@ void printCollision(Collision *pC) {
   printf("penetration: %7.2f\n", pC->penetration);
 }
 
+Collision collisions[999];
+int collisionC = 0;
+
+void drawCollision(uint32_t *b, Camera *cam, Collision *pC, uint32_t color) {
+  //if (!collisionC) return;
+  drawLine(b, worldToScreen(cam, pC->p), worldToScreen(cam, vAdd(pC->p, vMult(pC->normal, 3))), color);
+  drawLine(b, worldToScreen(cam, vAdd(pC->p, vMult(pC->normal, 3))), worldToScreen(cam, vAdd(pC->p, vMult(pC->normal, 4))), color + 0x00ff0000);
+}
+
 Matrix33 cubeiit = {6.0/16.0, 0, 0, 0, 6.0/16.0, 0, 0, 0, 6.0/16.0};
 Matrix34 null34 = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
@@ -44,6 +57,7 @@ CollisionBox cb;
 CollisionBox cb2;
 
 void key(uint32_t key, uint8_t state) {
+  if (state == 1) return;
   switch (key) {
     case 25:
       cam.p.y+=10;
@@ -57,9 +71,11 @@ void key(uint32_t key, uint8_t state) {
     case 40:
       cam.p.x+=10;
       break;
+    case 65:
+      stop = !stop;
   }
   cam.transform = m34FromQV(cam.o, cam.p);
-  printf("key: %d\n", key);
+  //printf("key: %d\n", key);
   //printV(cam.p);
 }
 
@@ -71,6 +87,7 @@ void *wl() {
         b[i*1920+j] = 0;
     drawBox(b, &cam, &cb, red);
     drawBox(b, &cam, &cb2, blue);
+    drawCollision(b, &cam, &collisions[0], green);
   }
   end();
   return NULL;
@@ -80,14 +97,11 @@ int main() {
   pthread_t tid;
   pthread_create(&tid, NULL, wl, NULL);
 
-  Collision collisions[999];
-  int collisionC = 0;
-
   //uint32_t *b = fbInit();
   //Rigidbody rb = {{2, 10, 0}, {0, 0, 0}, {0, 0, 0}, {0, -G, 0}, {0, 0, 0}, {0, 0, 0}, {1, 0.01, 0.01, 0.01}, 1, cubeiit, null34};
   //Rigidbody rb = {{3, 10, 0}, {0, 0, 0}, {0, 0, 0}, {0, -G, 0}, {0, 0, 0}, {0, 0, 0}, {0.92, 0, 0, 0.38}, 1, cubeiit, null34};
   Rigidbody rb = {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {1, 0, 0, 0}, 1, cubeiit, null34};
-  Rigidbody rb2 = {{-3, 4, 0}, {0, 0, 0}, {0, 0, 0}, {0, -G, 0}, {0, 0, 0}, {0, 0, 0}, {1, 0, 0, 0}, 1, cubeiit, null34};
+  Rigidbody rb2 = {{-3, 5, 0}, {0, 0, 0}, {0, 0, 0}, {0, -G, 0}, {0, 0, 0}, {0, 0, 0}, {1, 0, 0, 0}, 1, cubeiit, null34};
   //rb.o = qvAdd(rb.o, (Vector){0, 0.5, 0});
   rb.o = qNorm(rb.o);
   rb2.o = qNorm(rb2.o);
@@ -96,13 +110,15 @@ int main() {
   cb = (CollisionBox){&rb, {0, 0, 0}, {2, 2, 2}};
   cb2 = (CollisionBox){&rb2, {0, 0, 0}, {2, 2, 2}};
 
-  cam = (Camera){{0, 0, -10}, 100, {1, 0, 0, 0}, null34};
+  cam = (Camera){{-2, 2, -10}, 200, {1, 0, 0, 0}, null34};
   cam.transform = m34FromQV(cam.o, cam.p);
 
   ConvexPolyhedra ph = {&rb, {0, 0, 0}, {2, 2, 2}};
   ConvexPolyhedra ph2 = {&rb2, {0, 0, 0}, {2, 2, 2}};
 
   for (;;) {
+    usleep((int)(1000000*dTime*slow));
+    if (stop) continue;
     updateRigidbody(&rb, dTime);
     updateRigidbody(&rb2, dTime);
     rb.transform = m34FromQV(rb.o, rb.p);
@@ -115,10 +131,11 @@ int main() {
     for (int i = 0; i < collisionC; i++) {
       resolveInterpenetration(&collisions[i]);
       resolveVelocity(&collisions[i]);
-      //printCollision(&collisions[i]);
+      printCollision(&collisions[i]);
+      printf("---------------------------------------------------------------------------\n");
     }
 
-    usleep((int)(1000000*dTime*10));
+    //usleep((int)(1000000*dTime*slow));
   }
 }
 
