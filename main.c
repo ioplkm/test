@@ -23,7 +23,7 @@
 #define dTime 1/64.0
 #define G 9.81
 
-int slow = 10;
+int slow = 1;
 
 bool stop = 0;
 
@@ -55,21 +55,22 @@ Matrix34 null34 = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 Camera cam;
 CollisionBox cb;
 CollisionBox cb2;
+CollisionBox cb3;
 
 void key(uint32_t key, uint8_t state) {
   if (state == 1) return;
   switch (key) {
     case 25:
-      cam.p.y+=10;
+      cam.p.y+=2;
       break;
     case 38:
-      cam.p.x-=10;
+      cam.p.x-=2;
       break;
     case 39:
-      cam.p.y-=10;
+      cam.p.y-=2;
       break;
     case 40:
-      cam.p.x+=10;
+      cam.p.x+=2;
       break;
     case 65:
       stop = !stop;
@@ -87,7 +88,10 @@ void *wl() {
         b[i*1920+j] = 0;
     drawBox(b, &cam, &cb, red);
     drawBox(b, &cam, &cb2, blue);
+    drawBox(b, &cam, &cb3, white);
     drawCollision(b, &cam, &collisions[0], green);
+    drawCollision(b, &cam, &collisions[1], green);
+    drawCollision(b, &cam, &collisions[2], green);
   }
   end();
   return NULL;
@@ -102,37 +106,45 @@ int main() {
   //Rigidbody rb = {{3, 10, 0}, {0, 0, 0}, {0, 0, 0}, {0, -G, 0}, {0, 0, 0}, {0, 0, 0}, {0.92, 0, 0, 0.38}, 1, cubeiit, null34};
   Rigidbody rb = {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {1, 0, 0, 0}, 1, cubeiit, null34};
   Rigidbody rb2 = {{-3, 5, 0}, {0, 0, 0}, {0, 0, 0}, {0, -G, 0}, {0, 0, 0}, {0, 0, 0}, {1, 0, 0, 0}, 1, cubeiit, null34};
+  Rigidbody rb3 = {{3, 9, 0}, {0, 0, 0}, {0, 0, 0}, {0, -G, 0}, {0, 0, 0}, {0, 0, 0}, {1, 0, 0, 0}, 1, cubeiit, null34};
   //rb.o = qvAdd(rb.o, (Vector){0, 0.5, 0});
   rb.o = qNorm(rb.o);
   rb2.o = qNorm(rb2.o);
   rb.transform = m34FromQV(rb.o, rb.p);
   rb2.transform = m34FromQV(rb2.o, rb2.p);
+  rb3.transform = m34FromQV(rb3.o, rb3.p);
   cb = (CollisionBox){&rb, {0, 0, 0}, {2, 2, 2}};
   cb2 = (CollisionBox){&rb2, {0, 0, 0}, {2, 2, 2}};
+  cb3 = (CollisionBox){&rb3, {0, 0, 0}, {2, 2, 2}};
 
   cam = (Camera){{-2, 2, -10}, 200, {1, 0, 0, 0}, null34};
   cam.transform = m34FromQV(cam.o, cam.p);
 
   ConvexPolyhedra ph = {&rb, {0, 0, 0}, {2, 2, 2}};
   ConvexPolyhedra ph2 = {&rb2, {0, 0, 0}, {2, 2, 2}};
+  ConvexPolyhedra ph3 = {&rb3, {0, 0, 0}, {2, 2, 2}};
 
   for (;;) {
     usleep((int)(1000000*dTime*slow));
     if (stop) continue;
     updateRigidbody(&rb, dTime);
     updateRigidbody(&rb2, dTime);
+    updateRigidbody(&rb3, dTime);
     rb.transform = m34FromQV(rb.o, rb.p);
     rb2.transform = m34FromQV(rb2.o, rb2.p);
+    rb3.transform = m34FromQV(rb3.o, rb3.p);
 
     collisionC = 0;
     collisionC += collision(&ph, &ph2, &collisions[collisionC]);
+    collisionC += collision(&ph, &ph3, &collisions[collisionC]);
+    collisionC += collision(&ph2, &ph3, &collisions[collisionC]);
     //collisionC += BoxBoxCollision(&cb, &cb2, &collisions[collisionC]);
 
     for (int i = 0; i < collisionC; i++) {
       resolveInterpenetration(&collisions[i]);
       resolveVelocity(&collisions[i]);
-      printCollision(&collisions[i]);
-      printf("---------------------------------------------------------------------------\n");
+      //printCollision(&collisions[i]);
+      //printf("---------------------------------------------------------------------------\n");
     }
 
     //usleep((int)(1000000*dTime*slow));
